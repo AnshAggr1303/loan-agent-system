@@ -575,28 +575,35 @@ async def get_application_history_tool(customer_id: str) -> str:
 @tool
 async def generate_sanction_letter_tool(application_data: str) -> str:
     """
-    Generate PDF sanction letter for approved loan.
+    Generate PDF sanction letter for approved loan and upload to Supabase Storage.
     Only use after loan is approved.
     
     Args:
         application_data: JSON string with application details
     
     Returns:
-        JSON string with PDF URL
+        JSON string with public PDF URL
     """
     try:
+        from utils.pdf_generator import create_sanction_letter
+        
         data = json.loads(application_data)
         
-        # For now, return a placeholder
-        # Real implementation would use reportlab to generate PDF
+        # Generate PDF and upload to Supabase Storage
+        pdf_bytes, public_url = create_sanction_letter(data)
         
         return json.dumps({
             "success": True,
-            "message": "Sanction letter generated",
-            "download_url": f"/api/documents/{data.get('application_id')}.pdf"
+            "message": "Sanction letter generated successfully",
+            "download_url": public_url,
+            "file_size_kb": len(pdf_bytes) / 1024
         })
     except Exception as e:
-        return json.dumps({"success": False, "error": str(e)})
+        print(f"❌ Error generating sanction letter: {e}")
+        return json.dumps({
+            "success": False,
+            "error": f"Failed to generate sanction letter: {str(e)}"
+        })
 
 # ============================================================================
 # TOOL 13: CALCULATE EMI
